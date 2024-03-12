@@ -6,7 +6,7 @@ def readme():
 
 setup(
     name="xmlriver",
-    version="0.11",
+    version="0.13",
     author="Ivan Sharkov",
     author_email="admin@kurshub.ru",
     description="Пакет для работы с поисковой выдачей Google и Yandex по API через сервис XMLRiver / Package for working with Google and Yandex search results via API via XMLRiver service.",

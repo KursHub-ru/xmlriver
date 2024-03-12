@@ -16,11 +16,13 @@
     key = '' #Ваш ключ со страницы https://xmlriver.com/queries/
     google = xmlriver.Google(user, key)
     query = 'Ваш запрос'
-    if google.query(query):
+    if google.request(query):
 	    print(google.results)
 
 ## Дополнительные параметры
 Вы можете передавать дополнительные параметры, которые представлены на странице https://xmlriver.com/apidoc/api-about/ (для Google) и https://xmlriver.com/apiydoc/apiy-about/ (для Яндекс)
+
+Можно доработать по примерам https://xmlriver.com/apidoc/api-organic/
 
 **Пример передачи параметров:**
 
@@ -33,7 +35,7 @@
 ## Доступные методы и атрибуты
  1. google.get_balance() - Получить информацию о балансе
  2. google.get_cost() - Получить стоимость за 1 000 запросов
- 3. google.query(query, **kwargs) - Отправить запрос к Google
+ 3. google.request(query, **kwargs) - Отправить запрос к Google
  4. google.pages - Число, количество найденных результатов
  5. google.results - Список найденных документов
  6. google.get_urls() - Список найденных URL
@@ -42,6 +44,7 @@
  9. google.is_trust_domain(domain, **kwargs) - Простая проверка домена на траст. True / False
  10. google.is_url_pessimised(url, **kwargs) - Проверка url на наличие фильтра - True / False. Перед этим проверьте, что URL проиндексирован
  11. google.is_url_indexed(url, **kwargs) - Проверка url на индексацию
+ 12. google.get_onebox_documents(query, types, **kwargs) - получить OneBox документы. Смотри https://xmlriver.com/apidoc/api-organic/#onebox
 
 ## Поддержка
 xmlriver использует пакеты requests и xmltodict и должен работать везде, где работает Python.
@@ -69,7 +72,7 @@ Hi! Welcome to the xmlriver package page, which allows you to interact via API w
     key = '' #Your key from page https://xmlriver.com/queries/
     google = xmlriver.Google(user, key)
     query = 'Your query'
-    if google.query(query):
+    if google.request(query):
 	    print(google.results)
 
 ## Additional parameters
@@ -86,15 +89,16 @@ Or directly in the query:
 ## Available methods and attributes
  1. google.get_balance() - Get balance information
  2. google.get_cost() - Get cost per 1,000 queries
- 3. google.query(query, **kwargs) - Send a query to Google
+ 3. google.request(query, **kwargs) - Send a query to Google
  4. google.pages - Number, number of results found
  5. google.results - List of documents found
  6. google.get_urls() - List of URLs found
  7. google.get_titles() - List of titles of search results
- 8. google.get_results_with_d
+ 8. google.get_results_with_domain(domain, **kwargs) - Analogous to the query "domain"-site:domain. Outputs the number of results
  9. google.is_trust_domain(domain, **kwargs) - Simple domain trust check. True / False
  10. google.is_url_pessimized(url, **kwargs) - Check url for filter - True / False. Before doing this, check that the url is indexed
  11. google.is_url_indexed(url, **kwargs) - Check url for indexing
+ 12. google.get_onebox_documents(query, types, **kwargs) - get OneBox documents. See https://xmlriver.com/apidoc/api-organic/#onebox
 
 ## Support
 xmlriver uses the requests and xmltodict packages and should work wherever Python is running.

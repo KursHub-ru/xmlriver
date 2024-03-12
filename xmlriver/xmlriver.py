@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 from .exceptions import *
 
 class XmlRiver():
+    error_message = ''
     def __init__(self, user, key, **kwargs):
         self.user = user
         self.key = key
@@ -41,28 +42,30 @@ class XmlRiver():
         r = requests.get(url, params=params)
         return float(r.text.strip())
         
-    def query(self, query, **kwargs):
+    def request(self, query, **kwargs):
         '''
         Make requests to xmlriver
         '''
-
+       
         self.query = query
         self.params['query'] = self.query
         self.params.update(kwargs)
         
         self.response = None
         self.status = False
-        self.results = []        
+        self.results = []         
 
         attemp = 1
         max_attemps = 3
+        
         
         try:
             while True:
                 r = requests.get(self.url, params=self.params, timeout=120)                
                 if r.status_code == 200:
-                    response = xmltodict.parse(r.text)
+                    response = xmltodict.parse(r.text)                    
                     response = response['yandexsearch']['response']
+                    
                     
                     if 'error' not in response.keys():
                         self.status = True
@@ -75,6 +78,12 @@ class XmlRiver():
                             self.pages = 0
                             self.status = True
                             return self.status
+                        elif self.code in [110, 111]:
+                            print('No available channels. Try in 10 seconds. Code:', self.code)
+                            time.sleep(10)
+                        elif self.code == 500:
+                            print('Network error on the xmlriver side. Try again in 10 seconds. Code:', self.code)
+                            time.sleep(10)
                         elif 'Выполните перезапрос' in response['error']['#text']:
                             print('They ask you to perform a re-request. Do it in 10 seconds')
                             time.sleep(10)
@@ -99,9 +108,16 @@ class XmlRiver():
         '''
         Extract and fill all data from response
         '''
-        self.pages = None        
-        if self.response:
-            self.pages = int(self.response["found"]["#text"])
+        self.pages = None
+        self.showing_results_for = None
+        self.fixtype = None
+
+        if self.response:            
+            self.showing_results_for = self.response.get('showing_results_for')
+            self.fixtype = self.response.get('fixtype')
+
+            self.pages = 0 if self.fixtype else int(self.response["found"]["#text"])
+
             groups = self.response["results"]["grouping"]["group"]
             if isinstance(groups, list):
                 documents = [group['doc'] for group in groups]
@@ -113,7 +129,10 @@ class XmlRiver():
                     'url' : document.get('url'),
                     'title' : document.get('title'),
                     'pubDate' : document.get('pubDate'),
-                    'extendedpassage' : document.get('extendedpassage'),                        
+                    'extendedpassage' : document.get('extendedpassage'),
+                    'contenttype': document.get('contenttype'),
+                    'breadcrumbs': document.get('breadcrumbs'),
+
                 }
                 self.results.append(tmp)
            
@@ -126,7 +145,7 @@ class XmlRiver():
         Get total results from domain
         '''
         query = 'site:' + domain
-        if self.query(query, **kwargs):
+        if self.request(query, **kwargs):
             return self.pages
         else:
             return False
@@ -150,7 +169,7 @@ class XmlRiver():
         Get all results asociated with domain
         '''
         query = f'"{domain}" -site:{domain}'
-        if self.query(query, **kwargs):
+        if self.request(query, **kwargs):
             return self.pages
         else:
             return False
@@ -163,7 +182,8 @@ class XmlRiver():
         query = domain.replace('.', ' ')
 
         trusted = False
-        if self.query(query, **kwargs):
+        
+        if self.request(query, **kwargs):            
             urls = self.get_urls()
             for url in urls:
                 check_domain = urlparse(url).netloc.replace('www.', '')
@@ -178,7 +198,7 @@ class XmlRiver():
         Check url for existing filetes by inurl:
         '''
         query = 'inurl:' + url
-        if self.query(query, **kwargs):
+        if self.request(query, **kwargs):
             return not bool(self.pages)
         else:
             return None
@@ -188,7 +208,16 @@ class XmlRiver():
         Check url for indexing by inurl:
         '''
         query = 'site:' + url
-        if self.query(query, **kwargs):
+        if self.request(query, **kwargs):
             return not bool(self.pages)
+        else:
+            return None
+    def get_onebox_documents(self, query, types, **kwargs):
+        '''
+        Read: https://xmlriver.com/apidoc/api-organic/#onebox
+        types: organic, unknown_onebox, video, images, news, calculator, recipes, translator, related_queries
+        '''
+        if self.request(query, **kwargs):
+            return [document for document in self.results if document['contenttype'] in types]
         else:
             return None
