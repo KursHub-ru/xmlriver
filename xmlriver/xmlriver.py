@@ -123,9 +123,12 @@ class XmlRiver():
                 documents = [group['doc'] for group in groups]
             else:
                 documents = [groups['doc']]
+
+            rank = 1
             
             for document in documents:
                 tmp = {
+                    'rank': rank,
                     'url' : document.get('url'),
                     'title' : document.get('title'),
                     'pubDate' : document.get('pubDate'),
@@ -135,6 +138,7 @@ class XmlRiver():
 
                 }
                 self.results.append(tmp)
+                rank += 1
            
 
 
@@ -199,7 +203,8 @@ class XmlRiver():
         '''
         query = 'inurl:' + url
         if self.request(query, **kwargs):
-            return not bool(self.pages)
+            urls = self.get_urls()
+            return False if url in urls else True
         else:
             return None
         
@@ -209,9 +214,11 @@ class XmlRiver():
         '''
         query = 'site:' + url
         if self.request(query, **kwargs):
-            return not bool(self.pages)
+            urls = self.get_urls()
+            return True if url in urls else False
         else:
             return None
+    
     def get_onebox_documents(self, query, types, **kwargs):
         '''
         Read: https://xmlriver.com/apidoc/api-organic/#onebox
